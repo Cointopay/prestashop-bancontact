@@ -6,7 +6,7 @@ Cointopay.com crypto payment plugin for: **PrestaShop**
 
 ## Install
 
-1. Download <https://github.com/Cointopay/prestashop-bancontact/archive/refs/heads/main.zip>
+1. Download <https://github.com/Cointopay/prestashop-bancontact/archive/refs/heads/master.zip>
 
 2. Go to your PrestaShop admin panel » **Modules** » **Module Manager**.
 
