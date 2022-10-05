@@ -91,7 +91,7 @@ class Cointopay_Direct_BancontactValidationModuleFrontController extends ModuleF
 
         \Cointopay_Direct_Bancontact\Cointopay_Direct_Bancontact::config($ctpConfig);
         $order = \Cointopay_Direct_Bancontact\Merchant\Order::createOrFail(array(
-            'order_id'         => $this->module->currentOrder,
+            'order_id'         => implode('----', [$orderObj->reference, $this->module->currentOrder]),
             'price'            => $total,
             'currency'         => $this->currencyCode($currency->iso_code),
             'cancel_url'       => $this->flashEncode($this->context->link->getModuleLink('cointopay_direct_bancontact', 'cancel')),
