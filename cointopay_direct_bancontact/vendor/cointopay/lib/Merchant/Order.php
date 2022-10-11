@@ -1,4 +1,5 @@
 <?php
+
 namespace cointopay_direct_bancontact\Merchant;
 
 use cointopay_direct_bancontact\Cointopay_Direct_Bancontact;
@@ -18,7 +19,7 @@ class Order extends Merchant
         $order = Cointopay_Direct_Bancontact::request('orders', 'GET', $params, $authentication);
         return new self($order);
     }
-	public static function ValidateOrder($params, $options = array(), $authentication = array())
+    public static function ValidateOrder($params, $options = array(), $authentication = array())
     {
         $order = Cointopay_Direct_Bancontact::request('validation', 'GET', $params, $authentication);
         return new self($order);
