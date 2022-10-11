@@ -96,76 +96,53 @@ class Cointopay_Direct_Bancontact extends PaymentModule
             return false;
         }
 
-        $order_ctp_pending = new OrderState();
-        $order_ctp_pending->module_name = $this->name;
-        $order_ctp_pending->name = array_fill(0, 10, 'Waiting card payment');
-        $order_ctp_pending->send_email = 0;
-        $order_ctp_pending->invoice = 0;
-        $order_ctp_pending->color = 'RoyalBlue';
-        $order_ctp_pending->unremovable = false;
-        $order_ctp_pending->logable = 0;
+        $newStates = [
+            [
+                'name' => 'instant bank transfer pending',
+                'color' => 'RoyalBlue',
+                'config' => 'COINTOPAY_CC_PENDING',
+            ],
+            [
+                'name' => 'instant payment accepted',
+                'color' => 'RoyalBlue',
+                'config' => 'COINTOPAY_CC_PAID',
+            ],
+            [
+                'name' => 'instant bank transfer',
+                'color' => 'RoyalBlue',
+                'config' => 'COINTOPAY_CC_PROCESSING_IN_PROGRESS',
+            ],
+            [
+                'name' => 'Cointopay Fiat payment payment failed',
+                'color' => '#FF8C00',
+                'config' => 'COINTOPAY_CC_FAILED',
+            ],
+            [
+                'name' => 'Cointopay Fiat payment payment expired',
+                'color' => '#DC143C',
+                'config' => 'COINTOPAY_CC_EXPIRED',
+            ],
+            [
+                'name' => 'Cointopay Fiat payment invoice is invalid',
+                'color' => '#8f0621',
+                'config' => 'COINTOPAY_CC_INVALID',
+            ],
+            [
+                'name' => 'Cointopay Fiat payment not enough',
+                'color' => '#32CD32',
+                'config' => 'COINTOPAY_CC_PNOTENOUGH',
+            ],
+        ];
 
-        $order_expired = new OrderState();
-        $order_expired->module_name = $this->name;
-        $order_expired->name = array_fill(0, 10, 'Cointopay Direct Bancontact payment expired');
-        $order_expired->send_email = 0;
-        $order_expired->invoice = 0;
-        $order_expired->color = '#DC143C';
-        $order_expired->unremovable = false;
-        $order_expired->logable = 0;
+        $existingStatesNames = OrderState::getOrderStates(1);
+        $existingStatesNames = empty($existingStatesNames) ? [] : array_column($existingStatesNames, 'name');
 
-        $order_invalid = new OrderState();
-        $order_invalid->module_name = $this->name;
-        $order_invalid->name = array_fill(0, 10, 'Cointopay Direct Bancontact invoice is invalid');
-        $order_invalid->send_email = 0;
-        $order_invalid->invoice = 0;
-        $order_invalid->color = '#8f0621';
-        $order_invalid->unremovable = false;
-        $order_invalid->logable = 0;
-
-        $order_not_enough = new OrderState();
-        $order_not_enough->module_name = $this->name;
-        $order_not_enough->name = array_fill(0, 10, 'Cointopay Direct Bancontact not enough');
-        $order_not_enough->send_email = 0;
-        $order_not_enough->invoice = 0;
-        $order_not_enough->color = '#32CD32';
-        $order_not_enough->unremovable = false;
-        $order_not_enough->logable = 0;
-
-        if ($order_ctp_pending->add()) {
-            copy(
-                _PS_ROOT_DIR_ . '/modules/cointopay_direct_bancontact/views/img/logo.png',
-                _PS_ROOT_DIR_ . '/img/os/' . (int)$order_ctp_pending->id . '.gif'
-            );
+        foreach ($newStates as $state) {
+            // create a new state if not already exists
+            if (!in_array($state['name'], $existingStatesNames)) {
+                $this->createOrderState($state);
+            }
         }
-
-        if ($order_expired->add()) {
-            copy(
-                _PS_ROOT_DIR_ . '/modules/cointopay_direct_bancontact/views/img/logo.png',
-                _PS_ROOT_DIR_ . '/img/os/' . (int)$order_expired->id . '.gif'
-            );
-        }
-
-        if ($order_invalid->add()) {
-            copy(
-                _PS_ROOT_DIR_ . '/modules/cointopay_direct_bancontact/views/img/logo.png',
-                _PS_ROOT_DIR_ . '/img/os/' . (int)$order_invalid->id . '.gif'
-            );
-        }
-
-        if ($order_not_enough->add()) {
-            copy(
-                _PS_ROOT_DIR_ . '/modules/cointopay_direct_bancontact/views/img/logo.png',
-                _PS_ROOT_DIR_ . '/img/os/' . (int)$order_not_enough->id . '.gif'
-            );
-        }
-
-
-        Configuration::updateValue('COINTOPAY_DIRECT_BANCONTACT_PNOTENOUGH', $order_not_enough->id);
-        Configuration::updateValue('COINTOPAY_DIRECT_BANCONTACT_EXPIRED', $order_expired->id);
-        Configuration::updateValue('COINTOPAY_DIRECT_BANCONTACT_INVALID', $order_invalid->id);
-        Configuration::updateValue('COINTOPAY_DIRECT_BANCONTACT_PENDING', $order_ctp_pending->id);
-
 
         if (_PS_VERSION_ >= '1.7.7') {
             if (
@@ -196,21 +173,28 @@ class Cointopay_Direct_Bancontact extends PaymentModule
 
     public function uninstall()
     {
-        $order_not_enough = new OrderState(Configuration::get('COINTOPAY_DIRECT_BANCONTACT_PNOTENOUGH'));
-        $order_state_expired = new OrderState(Configuration::get('COINTOPAY_DIRECT_BANCONTACT_EXPIRED'));
-        $order_state_invalid = new OrderState(Configuration::get('COINTOPAY_DIRECT_BANCONTACT_INVALID'));
-        $order_state_pending = new OrderState(Configuration::get('COINTOPAY_DIRECT_BANCONTACT_PENDING'));
+        return (parent::uninstall());
+    }
 
-        return (Configuration::deleteByName('COINTOPAY_DIRECT_BANCONTACT_MERCHANT_ID') &&
-            Configuration::deleteByName('COINTOPAY_DIRECT_BANCONTACT_SECURITY_CODE') &&
-            Configuration::deleteByName('COINTOPAY_DIRECT_BANCONTACT_DISPLAY_NAME') &&
-            Configuration::deleteByName('COINTOPAY_DIRECT_BANCONTACT_CRYPTO_CURRENCY') &&
-            $order_not_enough->delete() &&
-            $order_state_expired->delete() &&
-            $order_state_invalid->delete() &&
-            $order_state_pending->delete() &&
-            parent::uninstall()
-        );
+    protected function createOrderState($state)
+    {
+        $orderState = new OrderState();
+        $orderState->module_name = 'cointopay_direct_sofort';
+        $orderState->name = array_fill(0, 10, $state['name']);
+        $orderState->send_email = 0;
+        $orderState->invoice = 0;
+        $orderState->color = $state['color'];
+        $orderState->unremovable = false;
+        $orderState->logable = 0;
+
+        if ($orderState->add()) {
+            copy(
+                _PS_ROOT_DIR_ . '/modules/cointopay_direct_sofort/views/img/logo.png',
+                _PS_ROOT_DIR_ . '/img/os/' . (int)$orderState->id . '.gif'
+            );
+        }
+
+        Configuration::updateValue($state['config'], $orderState->id);
     }
 
     public function getContent()
