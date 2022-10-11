@@ -179,7 +179,7 @@ class Cointopay_Direct_Bancontact extends PaymentModule
     protected function createOrderState($state)
     {
         $orderState = new OrderState();
-        $orderState->module_name = 'cointopay_direct_sofort';
+        $orderState->module_name = 'cointopay_cc';
         $orderState->name = array_fill(0, 10, $state['name']);
         $orderState->send_email = 0;
         $orderState->invoice = 0;
@@ -189,7 +189,7 @@ class Cointopay_Direct_Bancontact extends PaymentModule
 
         if ($orderState->add()) {
             copy(
-                _PS_ROOT_DIR_ . '/modules/cointopay_direct_sofort/views/img/logo.png',
+                _PS_ROOT_DIR_ . '/modules/cointopay_direct_bancontact/views/img/logo.png',
                 _PS_ROOT_DIR_ . '/img/os/' . (int)$orderState->id . '.gif'
             );
         }
